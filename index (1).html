@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MPI - Penjelajah Tata Surya</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Space Grotesk -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        space: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        space: {
+                            900: '#030712',
+                            800: '#0b1528',
+                            700: '#111e35',
+                            600: '#1e2d4a',
+                            500: '#38bdf8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #030712;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px);
+            background-size: 550px 550px, 350px 350px, 250px 250px;
+            background-position: 0 0, 40px 60px, 130px 270px;
+            animation: backgroundMove 120s linear infinite;
+        }
+
+        @keyframes backgroundMove {
+            from { background-position: 0 0, 40px 60px, 130px 270px; }
+            to { background-position: 550px 550px, 390px 410px, 380px 820px; }
+        }
+
+        .glass-panel {
+            background: rgba(11, 21, 40, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-panel-light {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(3, 7, 18, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.3);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(56, 189, 248, 0.6);
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
+
+    <!-- Header / Navbar -->
+    <header class="glass-panel sticky top-0 z-50 px-4 py-3 border-b border-white/10">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-500 to-orange-600 flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                    <i class="fa-solid fa-sun text-white text-xl animate-pulse"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-bold font-space text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-300 to-yellow-200">
+                        ORBITA: Tata Surya Kita
+                    </h1>
+                    <p class="text-xs text-slate-400">Media Pembelajaran Interaktif & Simulasi Sains</p>
+                </div>
+            </div>
+            
+            <!-- Navigation Tabs -->
+            <nav class="flex flex-wrap bg-space-900/80 p-1 rounded-xl border border-white/5 gap-1">
+                <button onclick="switchTab('simulasi')" id="tab-simulasi" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                    <i class="fa-solid fa-circle-nodes mr-2"></i>Simulasi Orbit
+                </button>
+                <button onclick="switchTab('ensiklopedia')" id="tab-ensiklopedia" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-book-open mr-2"></i>Ensiklopedia
+                </button>
+                <button onclick="switchTab('komparator')" id="tab-komparator" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-scale-balanced mr-2"></i>Bandingkan Ukuran
+                </button>
+                <button onclick="switchTab('kuis')" id="tab-kuis" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-graduation-cap mr-2"></i>Kuis Interaktif
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 flex flex-col justify-start">
+        
+        <!-- SECTION 1: SIMULASI ORBIT -->
+        <section id="sec-simulasi" class="tab-content grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Canvas Simulation Controls and Screen -->
+            <div class="lg:col-span-8 flex flex-col gap-4">
+                <div class="glass-panel rounded-2xl overflow-hidden relative flex flex-col h-[500px] md:h-[600px] border border-white/10 shadow-2xl">
+                    <!-- Canvas UI Overlay Top -->
+                    <div class="absolute top-3 left-3 right-3 z-10 flex justify-between items-center pointer-events-none">
+                        <div class="glass-panel py-1.5 px-3 rounded-lg text-xs font-semibold text-sky-400 flex items-center gap-2 pointer-events-auto">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                            Simulasi Berjalan
+                        </div>
+                        <div class="flex gap-2 pointer-events-auto">
+                            <button id="btn-zoom-in" title="Perbesar" class="w-8 h-8 rounded-lg bg-space-900/80 hover:bg-sky-500/20 text-slate-300 hover:text-sky-400 flex items-center justify-center transition border border-white/5">
+                                <i class="fa-solid fa-magnifying-glass-plus"></i>
+                            </button>
+                            <button id="btn-zoom-out" title="Perkecil" class="w-8 h-8 rounded-lg bg-space-900/80 hover:bg-sky-500/20 text-slate-300 hover:text-sky-400 flex items-center justify-center transition border border-white/5">
+                                <i class="fa-solid fa-magnifying-glass-minus"></i>
+                            </button>
+                            <button id="btn-reset-view" title="Reset Tampilan" class="px-2 h-8 rounded-lg bg-space-900/80 hover:bg-sky-500/20 text-slate-300 hover:text-sky-400 flex items-center justify-center text-xs transition border border-white/5">
+                                Reset
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Canvas UI Overlay Bottom Control Bar -->
+                    <div class="absolute bottom-3 left-3 right-3 z-10 flex flex-wrap gap-3 items-center justify-between glass-panel p-3 rounded-xl border border-white/5">
+                        <div class="flex items-center gap-3">
+                            <button id="btn-play-pause" class="px-4 py-1.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-space-900 font-bold text-xs flex items-center gap-2 transition duration-200">
+                                <i class="fa-solid fa-pause" id="play-pause-icon"></i>
+                                <span id="play-pause-text">Jeda</span>
+                            </button>
+                            <div class="h-6 w-px bg-white/10"></div>
+                            <span class="text-xs text-slate-400">Kecepatan:</span>
+                            <input type="range" id="speed-slider" min="0" max="4" step="0.2" value="1" class="w-24 accent-sky-400 cursor-pointer">
+                            <span id="speed-val" class="text-xs font-semibold text-sky-400">1x</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
+                                <input type="checkbox" id="chk-orbits" checked class="rounded accent-sky-400">
+                                Garis Orbit
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
+                                <input type="checkbox" id="chk-names" checked class="rounded accent-sky-400">
+                                Nama Planet
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Canvas Element -->
+                    <canvas id="solar-canvas" class="w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+                </div>
+                <div class="glass-panel p-4 rounded-xl text-xs text-slate-400 flex items-center gap-3 border border-white/5">
+                    <i class="fa-solid fa-circle-info text-sky-400 text-base flex-shrink-0"></i>
+                    <p><strong>Tips Navigasi:</strong> Gunakan mouse/sentuhan untuk <strong>menggeser (drag)</strong> kamera, atau gunakan tombol zoom di kanan atas untuk menyesuaikan pandangan. <strong>Klik pada planet mana saja</strong> di dalam simulasi untuk melihat profil lengkapnya di panel kanan!</p>
+                </div>
+            </div>
+
+            <!-- Planet Detail Panel -->
+            <div class="lg:col-span-4 flex flex-col">
+                <div class="glass-panel rounded-2xl p-5 border border-white/10 flex-grow flex flex-col justify-between shadow-xl min-h-[450px]">
+                    <div id="sim-detail-content">
+                        <!-- Default state -->
+                        <div id="detail-placeholder" class="h-full flex flex-col items-center justify-center text-center py-20">
+                            <div class="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-4 text-3xl text-sky-400 animate-bounce">
+                                <i class="fa-solid fa-hand-pointer"></i>
+                            </div>
+                            <h3 class="text-lg font-space font-semibold text-slate-200">Pilih Objek Langit</h3>
+                            <p class="text-xs text-slate-400 max-w-xs mt-2">
+                                Klik salah satu objek planet atau matahari pada simulasi interaktif untuk melihat analisis data real-time, statistik, dan karakteristik astronomis objek tersebut.
+                            </p>
+                        </div>
+
+                        <!-- Active Planet Info State -->
+                        <div id="detail-active" class="hidden">
+                            <div class="flex items-center gap-4 mb-4 border-b border-white/10 pb-4">
+                                <div id="detail-avatar" class="w-16 h-16 rounded-full flex items-center justify-center text-3xl font-bold shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                                </div>
+                                <div>
+                                    <h3 id="detail-name" class="text-2xl font-bold font-space text-white">Bumi</h3>
+                                    <span id="detail-type" class="text-xs px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20 font-medium">Planet Terestrial</span>
+                                </div>
+                            </div>
+
+                            <p id="detail-desc" class="text-sm text-slate-300 leading-relaxed mb-4">
+                                Bumi adalah rumah kita, satu-satunya planet yang diketahui mendukung kehidupan di alam semesta. Memiliki air dalam bentuk cair di permukaannya.
+                            </p>
+
+                            <!-- Mini Facts Grid -->
+                            <div class="grid grid-cols-2 gap-3 mb-4">
+                                <div class="glass-panel-light p-2.5 rounded-lg">
+                                    <span class="block text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Jarak dari Surya</span>
+                                    <span id="detail-distance" class="text-xs font-bold text-slate-200 font-space">1.0 AU (149.6 jt km)</span>
+                                </div>
+                                <div class="glass-panel-light p-2.5 rounded-lg">
+                                    <span class="block text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Diameter</span>
+                                    <span id="detail-diameter" class="text-xs font-bold text-slate-200 font-space">12,742 km</span>
+                                </div>
+                                <div class="glass-panel-light p-2.5 rounded-lg">
+                                    <span class="block text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Suhu Rata-rata</span>
+                                    <span id="detail-temp" class="text-xs font-bold text-slate-200 font-space">15 °C</span>
+                                </div>
+                                <div class="glass-panel-light p-2.5 rounded-lg">
+                                    <span class="block text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Jumlah Satelit</span>
+                                    <span id="detail-moons" class="text-xs font-bold text-slate-200 font-space">1 Satelit</span>
+                                </div>
+                            </div>
+
+                            <div class="glass-panel-light p-3 rounded-lg border-l-4 border-amber-500 mb-4">
+                                <span class="block text-xs font-bold text-amber-400 mb-1"><i class="fa-solid fa-lightbulb mr-1.5"></i>Fakta Unik:</span>
+                                <p id="detail-funfact" class="text-xs text-slate-300 leading-relaxed">
+                                    Atmosfer Bumi melindunginya dari meteor berbahaya dan menyerap panas untuk menjaga suhu tetap stabil.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="action-more-info" class="hidden">
+                        <button onclick="viewInEncyclopedia()" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-sky-500/20 text-sky-400 border border-white/10 hover:border-sky-500/30 transition text-sm font-semibold flex items-center justify-center gap-2">
+                            Selengkapnya di Ensiklopedia <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: ENSIKLOPEDIA -->
+        <section id="sec-ensiklopedia" class="tab-content hidden flex-col gap-6">
+            <!-- Planet Selector Sidebar and Main Encyclopedia View -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <!-- Navigation list -->
+                <div class="md:col-span-3 flex flex-row md:flex-col gap-2 overflow-x-auto pb-2 md:pb-0 md:max-h-[600px] scrollbar-thin">
+                    <button onclick="selectEncyPlanet('Matahari')" class="ency-tab-btn flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl transition text-left glass-panel border border-amber-500/30 text-amber-400">
+                        <span class="w-4 h-4 rounded-full bg-amber-500 flex-shrink-0 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
+                        <span class="font-space font-medium text-sm">Matahari</span>
+                    </button>
+                    <!-- JavaScript will generate the remaining buttons dynamically -->
+                </div>
+
+                <!-- Info detail display panel -->
+                <div class="md:col-span-9 glass-panel rounded-2xl p-6 border border-white/10 shadow-2xl relative overflow-hidden">
+                    <div id="ency-bg-glow" class="absolute -right-40 -top-40 w-96 h-96 rounded-full blur-3xl opacity-20 pointer-events-none transition-all duration-500"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 pb-6 border-b border-white/10">
+                            <div>
+                                <div class="flex items-center gap-3">
+                                    <h2 id="ency-name" class="text-3xl md:text-4xl font-extrabold font-space text-white">Matahari</h2>
+                                    <span id="ency-symbol" class="text-2xl text-amber-400">☄️</span>
+                                </div>
+                                <p id="ency-subtitle" class="text-sm text-sky-400 mt-1">Pusat Gravitasi Tata Surya</p>
+                            </div>
+                            <div class="flex flex-col text-left lg:text-right">
+                                <span class="text-xs text-slate-400 font-semibold tracking-wider uppercase">Klasifikasi Objek</span>
+                                <span id="ency-class" class="text-lg font-bold font-space text-slate-200">Bintang Tipe G</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            <!-- Visual Graphic and Key Stats -->
+                            <div class="lg:col-span-4 flex flex-col gap-4">
+                                <div class="glass-panel-light rounded-xl p-8 flex items-center justify-center relative min-h-[220px] border border-white/5">
+                                    <div id="ency-visual" class="w-36 h-36 rounded-full flex items-center justify-center text-6xl shadow-[0_0_40px_rgba(245,158,11,0.4)] bg-gradient-to-tr from-yellow-500 to-amber-600 transition-all duration-500">
+                                        ☀️
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-panel-light rounded-xl p-4 flex flex-col gap-3">
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="text-slate-400"><i class="fa-solid fa-weight-hanging mr-2 text-sky-400 w-4"></i>Massa</span>
+                                        <span id="ency-mass" class="font-semibold text-slate-200 font-space">1.989 × 10³⁰ kg</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="text-slate-400"><i class="fa-solid fa-gauge-high mr-2 text-sky-400 w-4"></i>Gravitasi</span>
+                                        <span id="ency-gravity" class="font-semibold text-slate-200 font-space">274 m/s²</span>
+                                    </div>
+                                    <div class="flex justify-between items-center text-sm">
+                                        <span class="text-slate-400"><i class="fa-solid fa-rotate mr-2 text-sky-400 w-4"></i>Rotasi</span>
+                                        <span id="ency-rotation" class="font-semibold text-slate-200 font-space">25 Hari Bumi</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Narrative and Core Physics Data -->
+                            <div class="lg:col-span-8 flex flex-col gap-4">
+                                <div class="glass-panel-light rounded-xl p-4">
+                                    <h4 class="text-xs font-semibold text-sky-400 uppercase tracking-widest mb-2">Ikhtisar Deskriptif</h4>
+                                    <p id="ency-desc" class="text-sm text-slate-300 leading-relaxed">
+                                        Matahari adalah bintang di pusat Tata Surya. Benda langit ini hampir bulat sempurna dan terdiri dari plasma panas yang bercampur dengan medan magnet. Energi luar biasa yang dipancarkan dalam bentuk cahaya dan panas memicu seluruh kehidupan di Bumi dan mengendalikan cuaca serta musim.
+                                    </p>
+                                </div>
+
+                                <h4 class="text-sm font-semibold text-slate-200 font-space mt-2">Spesifikasi Fisik & Astronomis</h4>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div class="glass-panel-light p-3 rounded-lg flex gap-3 items-center">
+                                        <div class="w-9 h-9 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-400">
+                                            <i class="fa-solid fa-arrows-left-right"></i>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] text-slate-400 uppercase font-semibold">Diameter Aktual</span>
+                                            <span id="ency-diameter" class="text-sm font-bold text-slate-200">1,392,700 km</span>
+                                        </div>
+                                    </div>
+                                    <div class="glass-panel-light p-3 rounded-lg flex gap-3 items-center">
+                                        <div class="w-9 h-9 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-400">
+                                            <i class="fa-solid fa-ruler"></i>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] text-slate-400 uppercase font-semibold">Jarak Orbit Rata-rata</span>
+                                            <span id="ency-distance" class="text-sm font-bold text-slate-200">Pusat Sistem (0 AU)</span>
+                                        </div>
+                                    </div>
+                                    <div class="glass-panel-light p-3 rounded-lg flex gap-3 items-center">
+                                        <div class="w-9 h-9 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-400">
+                                            <i class="fa-solid fa-thermometer-half"></i>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] text-slate-400 uppercase font-semibold">Suhu Permukaan</span>
+                                            <span id="ency-temp" class="text-sm font-bold text-slate-200">~ 5,500 °C</span>
+                                        </div>
+                                    </div>
+                                    <div class="glass-panel-light p-3 rounded-lg flex gap-3 items-center">
+                                        <div class="w-9 h-9 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-400">
+                                            <i class="fa-solid fa-moon"></i>
+                                        </div>
+                                        <div>
+                                            <span class="block text-[10px] text-slate-400 uppercase font-semibold">Jumlah Pengikut (Satelit)</span>
+                                            <span id="ency-moons" class="text-sm font-bold text-slate-200">8 Planet Utama</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="glass-panel-light p-4 rounded-xl border-l-4 border-sky-400">
+                                    <h5 class="text-xs font-bold text-sky-400 mb-1 uppercase tracking-wide">Fakta Penting untuk Diketahui</h5>
+                                    <p id="ency-funfact" class="text-xs text-slate-300 leading-relaxed">
+                                        Massa Matahari mencakup sekitar 99.86% dari total massa seluruh Tata Surya. Struktur kimianya didominasi oleh gas Hidrogen (sekitar 73%) dan Helium (sekitar 25%).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: KOMPARATOR UKURAN -->
+        <section id="sec-komparator" class="tab-content hidden flex-col gap-6">
+            <div class="glass-panel rounded-2xl p-6 border border-white/10 shadow-2xl">
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold font-space text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-300">Komparator Skala Ukuran Planet</h2>
+                    <p class="text-sm text-slate-400 mt-1">Lihat perbandingan seberapa raksasa Jupiter atau seberapa kerdilnya Merkurius dibandingkan dengan planet pilihan Anda!</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <!-- Control Selectors -->
+                    <div class="flex flex-col gap-5">
+                        <div class="glass-panel-light p-4 rounded-xl border border-white/5">
+                            <label class="block text-xs font-bold text-sky-400 uppercase tracking-wider mb-2">Planet Utama (A):</label>
+                            <select id="comp-select-a" onchange="updateComparison()" class="w-full bg-space-900 border border-white/10 hover:border-sky-500/30 text-slate-200 rounded-lg p-2 text-sm focus:outline-none focus:border-sky-400">
+                                <!-- Options will be dynamically populated -->
+                            </select>
+                        </div>
+
+                        <div class="flex items-center justify-center">
+                            <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10 text-sky-400">
+                                <i class="fa-solid fa-right-left"></i>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel-light p-4 rounded-xl border border-white/5">
+                            <label class="block text-xs font-bold text-purple-400 uppercase tracking-wider mb-2">Planet Pembanding (B):</label>
+                            <select id="comp-select-b" onchange="updateComparison()" class="w-full bg-space-900 border border-white/10 hover:border-purple-500/30 text-slate-200 rounded-lg p-2 text-sm focus:outline-none focus:border-purple-400">
+                                <!-- Options will be dynamically populated -->
+                            </select>
+                        </div>
+
+                        <div class="glass-panel-light p-4 rounded-xl text-center">
+                            <h3 class="text-sm text-slate-400">Rasio Perbandingan Diameter:</h3>
+                            <div class="text-3xl font-extrabold font-space text-white my-2" id="comp-ratio-text">
+                                Planet A = 1.0x Planet B
+                            </div>
+                            <p class="text-xs text-slate-400" id="comp-explanation">Diameter Bumi kira-kira sama dengan diameter Venus.</p>
+                        </div>
+                    </div>
+
+                    <!-- Visual Comparison Canvas -->
+                    <div class="glass-panel-light rounded-xl p-6 flex flex-col justify-between items-center min-h-[350px] border border-white/5 relative overflow-hidden">
+                        <div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+                            <i class="fa-solid fa-scale-unbalanced text-9xl text-white"></i>
+                        </div>
+                        
+                        <div class="w-full flex justify-between px-4 text-xs font-semibold text-slate-400 mb-4 z-10">
+                            <span id="comp-lbl-a" class="text-sky-400">Planet A</span>
+                            <span id="comp-lbl-b" class="text-purple-400">Planet B</span>
+                        </div>
+
+                        <!-- Visual container where circles scale dynamically -->
+                        <div class="flex-grow flex items-center justify-around w-full gap-8 z-10 py-6">
+                            <!-- Circle A -->
+                            <div class="flex flex-col items-center gap-3">
+                                <div id="comp-circle-a" class="w-24 h-24 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 shadow-[0_0_20px_rgba(56,189,248,0.3)] transition-all duration-500 flex items-center justify-center text-xs font-bold">
+                                </div>
+                                <span class="text-xs font-space font-semibold text-slate-300" id="comp-name-a">Planet A</span>
+                                <span class="text-[10px] text-slate-400" id="comp-size-a">0 km</span>
+                            </div>
+
+                            <!-- Circle B -->
+                            <div class="flex flex-col items-center gap-3">
+                                <div id="comp-circle-b" class="w-24 h-24 rounded-full bg-gradient-to-tr from-purple-400 to-pink-600 shadow-[0_0_20px_rgba(192,132,252,0.3)] transition-all duration-500 flex items-center justify-center text-xs font-bold">
+                                </div>
+                                <span class="text-xs font-space font-semibold text-slate-300" id="comp-name-b">Planet B</span>
+                                <span class="text-[10px] text-slate-400" id="comp-size-b">0 km</span>
+                            </div>
+                        </div>
+
+                        <div class="w-full text-center text-[10px] text-slate-500 z-10 border-t border-white/5 pt-3">
+                            Visualisasi ukuran diatas dihitung menggunakan rasio matematis skala geometris diameter aktual planet.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: KUIS INTERAKTIF -->
+        <section id="sec-kuis" class="tab-content hidden flex-col gap-6">
+            <div class="glass-panel rounded-2xl p-6 border border-white/10 shadow-2xl max-w-3xl mx-auto w-full">
+                
+                <!-- Welcome/Start Screen -->
+                <div id="quiz-welcome" class="text-center py-8">
+                    <div class="w-20 h-20 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-4xl flex items-center justify-center mx-auto mb-5 animate-pulse">
+                        <i class="fa-solid fa-rocket"></i>
+                    </div>
+                    <h2 class="text-2xl md:text-3xl font-bold font-space text-white">Uji Kosmik Pengetahuan Anda</h2>
+                    <p class="text-slate-400 text-sm mt-2 max-w-md mx-auto">
+                        Seberapa dalam Anda memahami sistem tata surya kita? Ikuti kuis interaktif dengan 5 pertanyaan sains acak berikut dan dapatkan skor keahlian Anda!
+                    </p>
+                    
+                    <div class="glass-panel-light p-4 rounded-xl my-6 text-left border border-white/5">
+                        <h4 class="text-xs font-bold text-sky-400 mb-2 uppercase tracking-wide"><i class="fa-solid fa-list-check mr-2"></i>Aturan Kuis:</h4>
+                        <ul class="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
+                            <li>Terdiri dari 5 pertanyaan pilihan ganda pilihan acak.</li>
+                            <li>Tidak ada batasan waktu. Pikirkan matang-matang sebelum memilih.</li>
+                            <li>Hasil instan beserta ulasan penjelasan akan ditampilkan setiap jawaban diklik.</li>
+                            <li>Dapatkan skor minimum 80% untuk dianugerahi gelar Penjelajah Astronomi.</li>
+                        </ul>
+                    </div>
+
+                    <button onclick="startQuiz()" class="px-8 py-3 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-space-900 font-bold font-space shadow-[0_0_20px_rgba(56,189,248,0.4)] transition transform hover:scale-[1.02] duration-200">
+                        Mulai Misi Kuis <i class="fa-solid fa-angle-right ml-1"></i>
+                    </button>
+                </div>
+
+                <!-- Active Question Screen -->
+                <div id="quiz-active" class="hidden">
+                    <!-- Progress Bar Header -->
+                    <div class="flex justify-between items-center text-xs mb-3 font-semibold text-slate-400">
+                        <span>Pertanyaan <strong id="quiz-num-current" class="text-sky-400">1</strong> dari <strong id="quiz-num-total">5</strong></span>
+                        <span>Skor Sementara: <strong id="quiz-current-score" class="text-emerald-400">0</strong></span>
+                    </div>
+                    <div class="w-full bg-space-900 h-2 rounded-full overflow-hidden mb-6 border border-white/5">
+                        <div id="quiz-progress-bar" class="bg-gradient-to-r from-sky-400 to-indigo-500 h-full transition-all duration-300" style="width: 20%;"></div>
+                    </div>
+
+                    <!-- Question Container -->
+                    <div class="mb-6">
+                        <h3 id="quiz-question" class="text-lg font-bold text-slate-100 font-space leading-snug">
+                            Manakah planet terpanas di sistem tata surya kita?
+                        </h3>
+                    </div>
+
+                    <!-- Answers options -->
+                    <div class="flex flex-col gap-3" id="quiz-options-container">
+                        <!-- Dynamic generated options -->
+                    </div>
+
+                    <!-- Explanation/Feedback Alert -->
+                    <div id="quiz-feedback" class="hidden mt-6 glass-panel-light p-4 rounded-xl border-l-4 transition-all duration-300">
+                        <div class="flex gap-3 items-start">
+                            <span id="feedback-icon" class="text-lg"></span>
+                            <div>
+                                <h4 id="feedback-title" class="text-sm font-bold">Benar!</h4>
+                                <p id="feedback-explanation" class="text-xs text-slate-300 mt-1 leading-relaxed">
+                                    Meskipun Merkurius paling dekat dengan Matahari, Venus adalah yang terpanas karena atmosfernya yang tebal menjebak panas matahari melalui efek rumah kaca ekstrem.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Next button -->
+                    <div class="mt-6 flex justify-end">
+                        <button id="quiz-btn-next" onclick="nextQuestion()" class="hidden px-5 py-2.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-space-900 font-bold text-xs items-center gap-2 transition">
+                            <span>Lanjutkan</span> <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Result Score Screen -->
+                <div id="quiz-result" class="hidden text-center py-6">
+                    <div id="quiz-result-graphic" class="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 text-5xl">
+                        🏆
+                    </div>
+                    <h2 class="text-2xl font-bold font-space text-white" id="quiz-result-title">Misi Berhasil Diselesaikan!</h2>
+                    <p class="text-slate-400 text-sm mt-1 mb-6" id="quiz-result-desc">Anda menjawab dengan sangat luar biasa.</p>
+
+                    <!-- Score Card Grid -->
+                    <div class="grid grid-cols-2 gap-4 max-w-sm mx-auto mb-6">
+                        <div class="glass-panel-light p-3.5 rounded-xl border border-white/5">
+                            <span class="block text-[10px] text-slate-400 uppercase font-semibold">Skor Akhir</span>
+                            <span class="text-3xl font-black font-space text-sky-400" id="quiz-result-score">80%</span>
+                        </div>
+                        <div class="glass-panel-light p-3.5 rounded-xl border border-white/5">
+                            <span class="block text-[10px] text-slate-400 uppercase font-semibold">Tingkat Akurasi</span>
+                            <span class="text-3xl font-black font-space text-indigo-400" id="quiz-result-accuracy">4 / 5</span>
+                        </div>
+                    </div>
+
+                    <!-- Status/Badge Certificate visualizer -->
+                    <div class="glass-panel-light p-4 rounded-xl border border-white/5 border-dashed max-w-md mx-auto mb-6">
+                        <span class="text-[10px] text-amber-400 font-bold uppercase tracking-widest block mb-1"><i class="fa-solid fa-award mr-1"></i>Sertifikat Pencapaian</span>
+                        <h4 class="text-sm font-bold text-slate-200" id="quiz-badge-title">Gelar: Penjelajah Astronomi Pemula</h4>
+                        <p class="text-xs text-slate-400 mt-1">Diberikan atas kelulusan penguasaan materi struktur sains Tata Surya.</p>
+                    </div>
+
+                    <div class="flex gap-3 justify-center">
+                        <button onclick="resetQuiz()" class="px-5 py-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 text-xs font-semibold transition">
+                            <i class="fa-solid fa-arrow-rotate-left mr-1.5"></i>Ulangi Kuis
+                        </button>
+                        <button onclick="switchTab('simulasi')" class="px-5 py-2.5 rounded-lg bg-sky-500 hover:bg-sky-400 text-space-900 text-xs font-bold transition">
+                            Kembali ke Simulasi <i class="fa-solid fa-circle-nodes ml-1.5"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass-panel mt-auto py-4 px-4 border-t border-white/5 text-center text-slate-500 text-xs">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p>© 2026 ORBITA Space Academy. Dibuat sebagai Media Pembelajaran Interaktif Edukasi Astronomi.</p>
+            <div class="flex gap-4">
+                <span class="hover:text-slate-300 transition cursor-help" title="Sistem 8 Planet Utama beserta Matahari"><i class="fa-solid fa-globe mr-1"></i>8 Planet</span>
+                <span class="hover:text-slate-300 transition cursor-help" title="Skala disesuaikan untuk kenyamanan visualisasi layar"><i class="fa-solid fa-ruler-combined mr-1"></i>Logarithmic Orbit Scale</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Data and Logic -->
+    <script>
+        // Database data Tata Surya (Bahasa Indonesia)
+        const spaceData = {
+            "Matahari": {
+                name: "Matahari",
+                subtitle: "Pusat Gravitasi Tata Surya",
+                class: "Bintang Deret Utama (Tipe G)",
+                symbol: "☀️",
+                desc: "Matahari adalah bintang induk yang mendominasi dan mengendalikan dinamika gravitasi sistem Tata Surya kita. Berupa bola plasma hidrogen dan helium pijar raksasa, Matahari melangsungkan fusi termonuklir di intinya, melepaskan energi masif yang menyokong seluruh metabolisme biologis kehidupan di planet Bumi.",
+                distance: "Pusat Tata Surya (0 AU)",
+                distanceValue: 0,
+                diameter: "1.392.700 km",
+                diameterValue: 1392700,
+                temp: "~ 5.500 °C (Inti: ~15.000.000 °C)",
+                moons: "8 Planet & Ratusan Satelit Alami",
+                mass: "1,989 × 10³⁰ kg",
+                gravity: "274 m/s²",
+                rotation: "25 Hari Bumi",
+                funfact: "Massa Matahari menguasai 99,86% massa sistem tata surya kita. Cahaya yang dihasilkan matahari membutuhkan waktu sekitar 8 menit 20 detik untuk merambat sejauh 150 juta kilometer menuju Bumi.",
+                color: "#f59e0b",
+                gradient: "from-yellow-400 to-orange-600 shadow-[0_0_40px_rgba(245,158,11,0.5)]",
+                radius: 20 // scale size on simulation
+            },
+            "Merkurius": {
+                name: "Merkurius",
+                subtitle: "Planet Terdekat dari Matahari",
+                class: "Planet Terestrial (Batuan)",
+                symbol: "🪐",
+                desc: "Merkurius merupakan planet terkecil di Tata Surya dan yang posisinya paling merapat ke Matahari. Karena hampir tidak memiliki atmosfer untuk menahan radiasi dan menyimpan panas, planet ini mengalami fluktuasi temperatur paling ekstrem di antara semua objek planet.",
+                distance: "0,39 AU (57,9 Juta km)",
+                distanceValue: 0.39,
+                diameter: "4.879 km",
+                diameterValue: 4879,
+                temp: "-173 °C hingga 427 °C",
+                moons: "Tidak ada",
+                mass: "3,301 × 10²³ kg",
+                gravity: "3.7 m/s²",
+                rotation: "59 Hari Bumi",
+                funfact: "Meskipun merupakan planet terdekat dengan Matahari, Merkurius bukanlah planet terpanas di Tata Surya kita. Predikat terpanas dipegang oleh Venus karena selimut atmosfer tebalnya.",
+                color: "#9ca3af",
+                gradient: "from-gray-400 to-slate-600 shadow-[0_0_15px_rgba(156,163,175,0.3)]",
+                radius: 6
+            },
+            "Venus": {
+                name: "Venus",
+                subtitle: "Kembaran Bumi yang Beracun",
+                class: "Planet Terestrial (Batuan)",
+                symbol: "⭐",
+                desc: "Venus seringkali dijuluki sebagai kembaran Bumi karena dimensi, massa, dan gravitasi permukaan yang sangat serupa. Namun, Venus memiliki iklim super destruktif dengan tekanan atmosfer 92 kali lipat Bumi dan awan asam sulfat korosif.",
+                distance: "0,72 AU (108,2 Juta km)",
+                distanceValue: 0.72,
+                diameter: "12.104 km",
+                diameterValue: 12104,
+                temp: "462 °C (Konstan)",
+                moons: "Tidak ada",
+                mass: "4,867 × 10²⁴ kg",
+                gravity: "8.87 m/s²",
+                rotation: "243 Hari Bumi (Retrogard)",
+                funfact: "Venus adalah planet terpanas karena efek rumah kaca tak terkendali. Planet ini berotasi searah jarum jam (berlawanan arah dari mayoritas planet lain), membuat matahari di Venus terbit di ufuk barat.",
+                color: "#f59e0b",
+                gradient: "from-amber-300 to-yellow-600 shadow-[0_0_20px_rgba(245,158,11,0.4)]",
+                radius: 8.5
+            },
+            "Bumi": {
+                name: "Bumi",
+                subtitle: "Satu-satunya Rumah Kehidupan",
+                class: "Planet Terestrial (Batuan)",
+                symbol: "🔵",
+                desc: "Bumi adalah oasis kosmik kita, satu-satunya objek angkasa yang terbukti secara definitif menyokong bioma kehidupan. Memiliki hidrosfer cair yang melimpah (71% air) serta atmosfer kaya nitrogen-oksigen yang memblokir radiasi sinar kosmik berbahaya.",
+                distance: "1,00 AU (149,6 Juta km)",
+                distanceValue: 1.0,
+                diameter: "12.742 km",
+                diameterValue: 12742,
+                temp: "-89 °C hingga 58 °C (Rata-rata 15 °C)",
+                moons: "1 (Bulan / Luna)",
+                mass: "5,972 × 10²⁴ kg",
+                gravity: "9.81 m/s²",
+                rotation: "24 Jam",
+                funfact: "Atmosfer kita tidak hanya memberi napas, melainkan bertindak sebagai perisai pelindung yang meleburkan jutaan meteor kecil yang masuk tiap harinya sebelum sempat menumbuk tanah.",
+                color: "#3b82f6",
+                gradient: "from-blue-400 to-indigo-600 shadow-[0_0_20px_rgba(59,130,246,0.4)]",
+                radius: 9
+            },
+            "Mars": {
+                name: "Mars",
+                subtitle: "Planet Merah Masa Depan Manusia",
+                class: "Planet Terestrial (Batuan)",
+                symbol: "🔴",
+                desc: "Mars memiliki ketertarikan tinggi bagi sains karena topografi yang menyerupai gurun Bumi dan jejak air purba. Memiliki atmosfer tipis yang didominasi karbon dioksida dan tanah kaya kandungan besi oksida (karat) yang memberinya rona kemerahan khas.",
+                distance: "1,52 AU (227,9 Juta km)",
+                distanceValue: 1.52,
+                diameter: "6.779 km",
+                diameterValue: 6779,
+                temp: "-153 °C hingga 20 °C",
+                moons: "2 (Phobos & Deimos)",
+                mass: "6,417 × 10²³ kg",
+                gravity: "3.72 m/s²",
+                rotation: "24.6 Jam",
+                funfact: "Mars menyimpan gunung berapi perisai tertinggi di Tata Surya kita yang dinamakan Olympus Mons. Tingginya mencapai 22 km, hampir 3 kali lipat dari tinggi Gunung Everest Bumi!",
+                color: "#ef4444",
+                gradient: "from-red-400 to-orange-700 shadow-[0_0_15px_rgba(239,68,68,0.3)]",
+                radius: 7
+            },
+            "Jupiter": {
+                name: "Jupiter",
+                subtitle: "Raksasa Gas Pelindung Tata Surya",
+                class: "Raksasa Gas (Jovian)",
+                symbol: "🌀",
+                desc: "Jupiter adalah planet terbesar, berukuran dua kali lipat massa kumulatif seluruh planet lain digabung menjadi satu. Sebagai raksasa gas tanpa pijakan padat permukaan, Jupiter memiliki magnetosfer raksasa dan badai badai atmosfer abadi yang legendaris.",
+                distance: "5,20 AU (778,5 Juta km)",
+                distanceValue: 5.2,
+                diameter: "139.820 km",
+                diameterValue: 139820,
+                temp: "-108 °C",
+                moons: "95 (Ganimede, Io, Europa, Kalisto...)",
+                mass: "1,898 × 10² kg",
+                gravity: "24.79 m/s²",
+                rotation: "10 Jam (Tercepat)",
+                funfact: "Badai ikonik 'Bintik Merah Raksasa' (Great Red Spot) di Jupiter adalah badai topan masif selebar diameter planet Bumi yang telah berkecamuk tanpa henti minimal selama 300 tahun terakhir.",
+                color: "#f97316",
+                gradient: "from-orange-400 to-amber-800 shadow-[0_0_25px_rgba(249,115,22,0.3)]",
+                radius: 14
+            },
+            "Saturnus": {
+                name: "Saturnus",
+                subtitle: "Permata Tercantik Bermahkota Cincin",
+                class: "Raksasa Gas (Jovian)",
+                symbol: "🪐",
+                desc: "Saturnus adalah planet tercantik yang dikagumi karena sistem cincin es dan debu spektakuler yang mengelilinginya. Merupakan planet gas dengan densitas rata-rata paling rendah di tata surya, bahkan lebih rendah dibanding densitas air.",
+                distance: "9,58 AU (1,43 Miliar km)",
+                distanceValue: 9.58,
+                diameter: "116.460 km",
+                diameterValue: 116460,
+                temp: "-139 °C",
+                moons: "146 (Titan, Enceladus, Mimas...)",
+                mass: "5,683 × 10²⁶ kg",
+                gravity: "10.44 m/s²",
+                rotation: "10.7 Jam",
+                funfact: "Jika Anda bisa membuat kolam air raksasa yang cukup besar untuk menampung planet ini, Saturnus yang minim masa jenis ini akan mengapung di permukaan air seperti gabus pancing!",
+                color: "#fbbf24",
+                gradient: "from-yellow-300 to-yellow-700 shadow-[0_0_25px_rgba(251,191,36,0.3)]",
+                radius: 12
+            },
+            "Uranus": {
+                name: "Uranus",
+                subtitle: "Raksasa Es Misterius yang Rebahan",
+                class: "Raksasa Es (Jovian)",
+                symbol: "🌀",
+                desc: "Uranus adalah raksasa gas beku dengan atmosfer bernuansa biru muda dari penyerapan gas metana. Planet ini memiliki sumbu kemiringan rotasi super ekstrem, sehingga berputar searah jarum jam secara menyamping/rebahan di orbitnya.",
+                distance: "19,22 AU (2,87 Miliar km)",
+                distanceValue: 19.22,
+                diameter: "50.724 km",
+                diameterValue: 50724,
+                temp: "-197 °C hingga -224 °C",
+                moons: "28 (Titania, Oberon, Ariel...)",
+                mass: "8,681 × 10²⁵ kg",
+                gravity: "8.69 m/s²",
+                rotation: "17 Jam (Menyamping)",
+                funfact: "Sumbu rotasi Uranus miring 98 derajat. Hal ini membuat siklus musim di kutub Uranus sangat aneh, di mana satu kutub mengalami malam gelap gulita ekstrem selama 42 tahun terus-menerus.",
+                color: "#22d3ee",
+                gradient: "from-cyan-300 to-blue-500 shadow-[0_0_20px_rgba(34,211,238,0.3)]",
+                radius: 10
+            },
+            "Neptunus": {
+                name: "Neptunus",
+                subtitle: "Dunia Berangin Badai Terluar",
+                class: "Raksasa Es (Jovian)",
+                symbol: "🔵",
+                desc: "Neptunus adalah planet terluar terjauh yang dinobatkan sebagai dunia paling berangin di Tata Surya. Angin kencang supersoniknya berembus memecah keheningan gas metana beku, menciptakan bayangan warna biru laut pekat yang sangat memikat.",
+                distance: "30,05 AU (4,50 Miliar km)",
+                distanceValue: 30.05,
+                diameter: "49.244 km",
+                diameterValue: 49244,
+                temp: "-201 °C",
+                moons: "16 (Triton, Nereid...)",
+                mass: "1,024 × 10²⁶ kg",
+                gravity: "11.15 m/s²",
+                rotation: "16 Jam",
+                funfact: "Neptunus ditemukan melalui perhitungan matematika teoretis sebelum teleskop optik sempat menangkap posisinya secara fisik, karena orbit Uranus terdeteksi mengalami gangguan misterius.",
+                color: "#3b82f6",
+                gradient: "from-blue-500 to-indigo-800 shadow-[0_0_20px_rgba(59,130,246,0.3)]",
+                radius: 9.8
+            }
+        };
+
+        // Bank Soal Kuis (Acak)
+        const quizQuestionsBank = [
+            {
+                q: "Manakah planet terpanas di sistem tata surya kita?",
+                options: ["Merkurius", "Venus", "Mars", "Jupiter"],
+                correct: 1,
+                exp: "Meskipun Merkurius paling dekat dengan Matahari, Venus adalah yang terpanas karena efek rumah kaca ekstrem dari atmosfer tebalnya yang menjebak panas."
+            },
+            {
+                q: "Planet apakah yang memiliki gunung berapi tertinggi bernama Olympus Mons?",
+                options: ["Bumi", "Venus", "Mars", "Saturnus"],
+                correct: 2,
+                exp: "Mars menyimpan gunung api perisai Olympus Mons yang tingginya mencapai 22 km, menjadikannya gunung tertinggi di seluruh Tata Surya."
+            },
+            {
+                q: "Berapa lama waktu yang dibutuhkan cahaya matahari untuk sampai ke permukaan Bumi?",
+                options: ["Sekitar 1 menit", "Sekitar 8 menit", "Sekitar 1 jam", "Hampir instan"],
+                correct: 1,
+                exp: "Cahaya merambat secepat 300.000 km/detik. Jarak Bumi-Matahari (150 juta km) ditempuh cahaya dalam waktu sekitar 8 menit 20 detik."
+            },
+            {
+                q: "Planet manakah yang sumbu rotasinya miring ekstrem hingga berputar secara menyamping (rebahan)?",
+                options: ["Venus", "Uranus", "Neptunus", "Merkurius"],
+                correct: 1,
+                exp: "Uranus memiliki kemiringan sumbu 98 derajat, menyebabkannya berputar secara menyamping dibanding planet lain yang tegak lurus."
+            },
+            {
+                q: "Mengapa Mars berwarna merah mencolok jika diamati di langit malam?",
+                options: ["Suhu permukaannya sangat panas", "Permukaannya kaya kandungan besi oksida (karat)", "Banyak dipenuhi lahar gunung berapi", "Sinar matahari memantulkan gas nitrogen merah"],
+                correct: 1,
+                exp: "Rona kemerahan Mars berasal dari melimpahnya partikel karat besi oksida di permukaan tanah regolitnya."
+            },
+            {
+                q: "Siapakah planet raksasa gas terbesar di sistem tata surya?",
+                options: ["Saturnus", "Uranus", "Jupiter", "Neptunus"],
+                correct: 2,
+                exp: "Jupiter adalah planet terbesar, mencakup ukuran lebih dari dua kali lipat massa seluruh planet lain di Tata Surya jika digabungkan."
+            },
+            {
+                q: "Planet manakah yang kerap dibilang memiliki masa jenis paling rendah sehingga secara teori bisa mengapung di air?",
+                options: ["Saturnus", "Merkurius", "Uranus", "Bumi"],
+                correct: 0,
+                exp: "Saturnus tersusun atas mayoritas gas hidrogen-helium yang membuatnya memiliki densitas rata-rata lebih ringan daripada air (0.69 g/cm³)."
+            },
+            {
+                q: "Planet apa yang posisinya berhasil diprediksi oleh kalkulasi matematika sebelum terlihat oleh lensa teleskop?",
+                options: ["Mars", "Saturnus", "Uranus", "Neptunus"],
+                correct: 3,
+                exp: "Para astronom memprediksi keberadaan Neptunus lewat kalkulasi penyimpangan gravitasi orbit Uranus, sebelum akhirnya diverifikasi oleh observasi optik."
+            }
+        ];
+
+        // Global App States
+        let currentTab = 'simulasi';
+        let simulationPaused = false;
+        let simulationSpeed = 1;
+        let canvas, ctx;
+        let animationFrameId;
+        
+        // Simulation Coordinate offsets (for drag and pan)
+        let offsetX = 0;
+        let offsetY = 0;
+        let scaleZoom = 1.0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+
+        // Simulation Planets Array Setup
+        let simPlanets = [];
+        let clickedPlanet = null;
+
+        // Quiz states
+        let quizQuestions = [];
+        let quizCurrentIndex = 0;
+        let quizScore = 0;
+        let quizAnswered = false;
+
+        // Initialize App on DOM Load
+        window.onload = function() {
+            initApp();
+        };
+
+        function initApp() {
+            initCanvas();
+            initEncyclopedia();
+            initComparison();
+            
+            // Start simulation loop
+            animate();
+            
+            // Setup resize listener
+            window.addEventListener('resize', handleResize);
+        }
+
+        // Switch Navigation Tabs
+        function switchTab(tabId) {
+            currentTab = tabId;
+            
+            // Hide all sections
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('flex'));
+            
+            // Unhighlight all tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/5";
+            });
+
+            // Show active section
+            const activeSec = document.getElementById(`sec-${tabId}`);
+            if(tabId === 'simulasi' || tabId === 'ensiklopedia' || tabId === 'komparator') {
+                activeSec.classList.remove('hidden');
+                activeSec.classList.add('flex');
+            } else {
+                activeSec.classList.remove('hidden'); // Kuis uses flex/block custom
+            }
+
+            // Highlight active tab
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            activeTab.className = "tab-btn px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 bg-sky-500/20 text-sky-300 border border-sky-500/30";
+
+            // Specific tab entry triggers
+            if(tabId === 'simulasi') {
+                // Ensure canvas size fits container when showing simulation
+                setTimeout(handleResize, 50);
+            }
+        }
+
+        // ----------------------------------------------------
+        // SECTION 1: SIMULATION ENGINE (CANVAS)
+        // ----------------------------------------------------
+        function initCanvas() {
+            canvas = document.getElementById('solar-canvas');
+            ctx = canvas.getContext('2d');
+            handleResize();
+
+            // Populate planets positions/orbits in logarithmic scaling for perfect visualization
+            let rawKeys = Object.keys(spaceData);
+            
+            // We build simplified display metrics for the simulator coordinates
+            let orbitDistances = [
+                0,    // Matahari
+                55,   // Merkurius
+                85,   // Venus
+                120,  // Bumi
+                155,  // Mars
+                205,  // Jupiter
+                255,  // Saturnus
+                305,  // Uranus
+                355   // Neptunus
+            ];
+
+            // Speed orbits based on real orbital dynamics logic (closer = faster)
+            let orbitSpeeds = [
+                0,        // Matahari
+                0.03,     // Merkurius
+                0.02,     // Venus
+                0.015,    // Bumi
+                0.011,    // Mars
+                0.006,    // Jupiter
+                0.004,    // Saturnus
+                0.0025,   // Uranus
+                0.0017    // Neptunus
+            ];
+
+            simPlanets = [];
+            rawKeys.forEach((key, index) => {
+                const data = spaceData[key];
+                simPlanets.push({
+                    name: key,
+                    color: data.color,
+                    radius: data.radius,
+                    orbitRadius: orbitDistances[index],
+                    angle: Math.random() * Math.PI * 2, // randomized start angles
+                    surfaceAngle: Math.random() * 100,  // unique surface rotation speed offset
+                    speed: orbitSpeeds[index],
+                    details: data
+                });
+            });
+
+            // Set Offset centered initially
+            offsetX = canvas.width / 2;
+            offsetY = canvas.height / 2;
+
+            // Register Mouse Controls for Drag and Zoom
+            canvas.addEventListener('mousedown', startDrag);
+            canvas.addEventListener('mousemove', drag);
+            canvas.addEventListener('mouseup', endDrag);
+            canvas.addEventListener('mouseleave', endDrag);
+
+            // Touch events for mobile compatibility
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    startDrag({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
+                }
+            }, { passive: true });
+            canvas.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1) {
+                    drag({ clientX: e.touches[0].clientX, clientY: e.touches[0].clientY });
+                }
+            }, { passive: true });
+            canvas.addEventListener('touchend', endDrag);
+
+            // Zoom button triggers
+            document.getElementById('btn-zoom-in').onclick = () => { scaleZoom *= 1.25; };
+            document.getElementById('btn-zoom-out').onclick = () => { scaleZoom *= 0.8; };
+            document.getElementById('btn-reset-view').onclick = () => {
+                scaleZoom = 1.0;
+                offsetX = canvas.width / 2;
+                offsetY = canvas.height / 2;
+            };
+
+            // Play/Pause slider/buttons listeners
+            const playPauseBtn = document.getElementById('btn-play-pause');
+            const playPauseIcon = document.getElementById('play-pause-icon');
+            const playPauseText = document.getElementById('play-pause-text');
+            
+            playPauseBtn.onclick = () => {
+                simulationPaused = !simulationPaused;
+                if(simulationPaused) {
+                    playPauseIcon.className = "fa-solid fa-play";
+                    playPauseText.innerText = "Mulai";
+                } else {
+                    playPauseIcon.className = "fa-solid fa-pause";
+                    playPauseText.innerText = "Jeda";
+                }
+            };
+
+            const speedSlider = document.getElementById('speed-slider');
+            const speedVal = document.getElementById('speed-val');
+            speedSlider.oninput = (e) => {
+                simulationSpeed = parseFloat(e.target.value);
+                speedVal.innerText = `${simulationSpeed}x`;
+            };
+
+            // Canvas Click to Select Planet
+            canvas.addEventListener('click', handleCanvasClick);
+        }
+
+        function handleResize() {
+            if (canvas) {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+                // Keep simulation in bounds during resize
+                if(offsetX === 0) offsetX = canvas.width / 2;
+                if(offsetY === 0) offsetY = canvas.height / 2;
+            }
+        }
+
+        function startDrag(e) {
+            isDragging = true;
+            dragStartX = e.clientX - offsetX;
+            dragStartY = e.clientY - offsetY;
+        }
+
+        function drag(e) {
+            if (isDragging) {
+                offsetX = e.clientX - dragStartX;
+                offsetY = e.clientY - dragStartY;
+            }
+        }
+
+        function endDrag() {
+            isDragging = false;
+        }
+
+        // Detect Planet Click in Simulation
+        function handleCanvasClick(e) {
+            if (isDragging) return; // avoid trigger on drag release
+            
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            let closestPlanet = null;
+            let closestDist = Infinity;
+
+            simPlanets.forEach(p => {
+                // Calculate current screen coordinates of this planet
+                const x = offsetX + Math.cos(p.angle) * p.orbitRadius * scaleZoom;
+                const y = offsetY + Math.sin(p.angle) * p.orbitRadius * scaleZoom;
+                
+                // Euclidean distance check
+                const dx = clickX - x;
+                const dy = clickY - y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                // Check if hit fits within reasonable radius + padding
+                const hitRadius = Math.max(p.radius * scaleZoom, 15); // min touch target
+                if (dist < hitRadius && dist < closestDist) {
+                    closestDist = dist;
+                    closestPlanet = p;
+                }
+            });
+
+            if (closestPlanet) {
+                showPlanetDetail(closestPlanet.name);
+            }
+        }
+
+        // Update Information in Right Sidebar Simulation Tab
+        function showPlanetDetail(name) {
+            const data = spaceData[name];
+            if (!data) return;
+
+            clickedPlanet = name;
+
+            document.getElementById('detail-placeholder').classList.add('hidden');
+            document.getElementById('detail-active').classList.remove('hidden');
+            document.getElementById('action-more-info').classList.remove('hidden');
+
+            const avatar = document.getElementById('detail-avatar');
+            avatar.innerText = data.symbol;
+            // Clear prior bg-classes
+            avatar.className = `w-16 h-16 rounded-full flex items-center justify-center text-3xl font-bold bg-gradient-to-tr ${data.gradient}`;
+            
+            document.getElementById('detail-name').innerText = data.name;
+            document.getElementById('detail-type').innerText = data.class;
+            document.getElementById('detail-desc').innerText = data.desc;
+            
+            document.getElementById('detail-distance').innerText = data.distance;
+            document.getElementById('detail-diameter').innerText = data.diameter;
+            document.getElementById('detail-temp').innerText = data.temp;
+            document.getElementById('detail-moons').innerText = data.moons;
+            document.getElementById('detail-funfact').innerText = data.funfact;
+        }
+
+        function viewInEncyclopedia() {
+            if(clickedPlanet) {
+                switchTab('ensiklopedia');
+                selectEncyPlanet(clickedPlanet);
+            }
+        }
+
+        // --- HIGH QUALITY PROCEDURAL SURFACE RENDERER FOR CANVAS ---
+        function renderProceduralPlanet(ctx, name, px, py, r, surfAngle, dirX, dirY) {
+            ctx.save();
+            
+            // 1. Create absolute circular mask for the planet sphere
+            ctx.beginPath();
+            ctx.arc(px, py, r, 0, Math.PI * 2);
+            ctx.clip();
+
+            // 2. Draw specific surface textures based on the planet's unique real appearance
+            switch(name) {
+                case "Merkurius":
+                    // Base Dark Rocky Grey
+                    ctx.fillStyle = "#6b7280";
+                    ctx.fillRect(px - r, py - r, r * 2, r * 2);
+                    
+                    // Draw craters procedurally
+                    ctx.fillStyle = "rgba(0,0,0,0.18)";
+                    ctx.strokeStyle = "rgba(255,255,255,0.08)";
+                    ctx.lineWidth = 1;
+                    
+                    // Stationary crater offsets (relative to center)
+                    const craters = [
+                        {x: -0.4, y: -0.3, size: 0.2},
+                        {x: 0.3, y: 0.4, size: 0.15},
+                        {x: -0.2, y: 0.5, size: 0.25},
+                        {x: 0.5, y: -0.2, size: 0.1},
+                        {x: -0.5, y: 0.1, size: 0.15},
+                        {x: 0.1, y: -0.5, size: 0.2}
+                    ];
+                    craters.forEach(c => {
+                        let cx = px + c.x * r;
+                        let cy = py + c.y * r;
+                        let cr = c.size * r;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.stroke();
+                    });
+                    break;
+
+                case "Venus":
+                    // Base Sulphuric Atmosphere Yellow-Cream
+                    ctx.fillStyle = "#eab308";
+                    ctx.fillRect(px - r, py - r, r * 2, r * 2);
+                    
+                    // Draw moving Acid Clouds Swirls
+                    ctx.fillStyle = "#fef08a";
+                    ctx.beginPath();
+                    for (let i = -r; i < r; i += r * 0.4) {
+                        let y = py + i;
+                        let shift = Math.sin((i + surfAngle * 10) * 0.1) * r * 0.25;
+                        ctx.ellipse(px + shift, y, r * 1.1, r * 0.15, 0, 0, Math.PI * 2);
+                    }
+                    ctx.fill();
+                    
+                    ctx.fillStyle = "#ca8a04";
+                    ctx.beginPath();
+                    for (let i = -r + r * 0.2; i < r; i += r * 0.45) {
+                        let y = py + i;
+                        let shift = Math.cos((i + surfAngle * 15) * 0.08) * r * 0.3;
+                        ctx.ellipse(px - shift, y, r * 0.9, r * 0.1, 0, 0, Math.PI * 2);
+                    }
+                    ctx.fill();
+                    break;
+
+                case "Bumi":
+                    // Deep Blue Ocean base
+                    ctx.fillStyle = "#1e3a8a";
+                    ctx.fillRect(px - r, py - r, r * 2, r * 2);
+
+                    // Dynamic Rotating Green/Brown Continents
+                    ctx.fillStyle = "#166534";
+                    let tOffset = (surfAngle * r * 0.5) % (r * 4); // smooth seamless sliding
+                    
+                    for(let slide = -2; slide <= 2; slide++) {
+                        let startX = px - r + tOffset + (slide * r * 2.5);
+                        
+                        // Draw continental blobs
+                        ctx.beginPath();
+                        ctx.arc(startX, py - r*0.2, r * 0.6, 0, Math.PI * 2);
+                        ctx.arc(startX + r*0.3, py + r*0.3, r * 0.5, 0, Math.PI * 2);
+                        ctx.arc(startX - r*0.4, py + r*0.1, r * 0.45, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        // Add some brown/yellow desert highlight in continent centers
+                        ctx.fillStyle = "#b45309";
+                        ctx.beginPath();
+                        ctx.arc(startX + r*0.05, py - r*0.1, r * 0.3, 0, Math.PI * 2);
+                        ctx.arc(startX - r*0.2, py + r*0.1, r * 0.2, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = "#166534"; // revert
+                    }
+
+                    // Shimmering white cloud layer sliding slightly faster
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
+                    let cloudOffset = (surfAngle * r * 0.7) % (r * 4);
+                    for(let slide = -2; slide <= 2; slide++) {
+                        let cx = px - r + cloudOffset + (slide * r * 2.8);
+                        ctx.beginPath();
+                        ctx.ellipse(cx, py - r * 0.4, r * 0.9, r * 0.15, Math.PI/12, 0, Math.PI * 2);
+                        ctx.ellipse(cx - r*0.5, py + r * 0.5, r * 0.8, r * 0.1, -Math.PI/12, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    break;
+
+                case "Mars":
+                    // Rust Red / Iron Oxide Base
+                    ctx.fillStyle = "#9a3412";
+                    ctx.fillRect(px - r, py - r, r * 2, r * 2);
+
+                    // Darker sand patches
+                    ctx.fillStyle = "#431407";
+                    ctx.beginPath();
+                    ctx.arc(px - r*0.3, py + r*0.2, r * 0.6, 0, Math.PI * 2);
+                    ctx.arc(px + r*0.4, py - r*0.4, r * 0.4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // White Northern Polar Ice Cap (Always stationary at north)
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+                    ctx.beginPath();
+                    ctx.ellipse(px, py - r * 0.95, r * 0.4, r * 0.12, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+
+                case "Jupiter":
+                    // Base Jovian Clay Cream
+                    ctx.fillStyle = "#f59e0b";
+                    ctx.fillRect(px - r, py - r, r * 2, r * 2);
+
+                    // Multi-colored Horizontal Gas Bands
+                    const bandColors = ["#451a03", "#7c2d12", "#fed7aa", "#ea580c", "#451a03", "#ffedd5"];
+                    bandColors.forEach((col, idx) => {
+                        let bandH = r * 0.35;
+                        let bandY = py - r + (idx * bandH * 0.9);
+                        ctx.fillStyle = col;
+                        ctx.fillRect(px - r, bandY, r * 2, bandH);
+                    });
+
+                    // Dynamic Great Red Spot (animated floating oval on the south hemisphere)
+                    let grsX = px + Math.sin(surfAngle * 0.2) * r * 0.3;
+                    let grsY = py + r * 0.35;
+                    ctx.fillStyle = "#991b1b"; // Deep crimson spot
+                    ctx.beginPath();
+                    ctx.ellipse(grsX, grsY, r * 0.35, r * 0.2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Spot internal white storm core
+                    ctx.fillStyle = "#fed7aa";
+                    ctx.beginPath();
+                    ctx.ellipse(grsX, grsY, r * 0.18, r * 0.08, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    break;
+
+                case "Saturnus":
+                    // Pale Golden Beige Base
+                    ctx.fillStyle = "#fbbf24";
+                    ctx.fillRect(px - r, py - r, r * 2, r * 2);
+
+                    // Warm subtle atmospheric stripes
+                    const satBands = ["#b45309", "#d97706", "#fef08a", "#b45309"];
+                    satBands.forEach((col, idx) => {
+                        let bandH = r * 0.45;
+                        let bandY = py - r + (idx * bandH * 1.1);
+                        ctx.fillStyle = col;
+                        ctx.fillRect(px - r, bandY, r * 2, bandH);
+                    });
+                    break;
+
+                case "Uranus":
+                    // Soft Cyan/Aqua methane gas
+                    ctx.fillStyle = "#06b6d4";
+                    ctx.fillRect(px - r, py - r, r * 2, r * 2);
+
+                    // Light pastel green stripes tilted dynamically (98 degree axial tilt)
+                    ctx.fillStyle = "#67e8f9";
+                    ctx.save();
+                    ctx.translate(px, py);
+                    ctx.rotate(Math.PI / 2.2); // highly tilted lines
+                    ctx.fillRect(-r, -r*0.4, r*2, r*0.15);
+                    ctx.fillRect(-r, r*0.2, r*2, r*0.2);
+                    ctx.restore();
+                    break;
+
+                case "Neptunus":
+                    // Royal Dark Blue
+                    ctx.fillStyle = "#1e40af";
+                    ctx.fillRect(px - r, py - r, r * 2, r * 2);
+
+                    // Great Dark Spot (oval badai metana)
+                    let dspotX = px + Math.cos(surfAngle * 0.15) * r * 0.3;
+                    let dspotY = py - r * 0.15;
+                    ctx.fillStyle = "#1e3a8a";
+                    ctx.beginPath();
+                    ctx.ellipse(dspotX, dspotY, r * 0.4, r * 0.25, Math.PI / 6, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Wispy white methane cirrus cloud streaks
+                    ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+                    ctx.lineWidth = 1.5 * scaleZoom;
+                    ctx.beginPath();
+                    ctx.ellipse(px, py + r*0.35, r*0.8, r*0.1, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                    break;
+            }
+
+            // 3. Dynamic Spherical 3D Lighting Overlay (terminator) aligned perfectly pointing at Sun
+            let shadowGrad = ctx.createLinearGradient(
+                px - dirX * r, py - dirY * r, // fully lit side (towards Sun)
+                px + dirX * r, py + dirY * r  // completely dark side (away from Sun)
+            );
+            shadowGrad.addColorStop(0, 'rgba(255, 255, 255, 0.3)');  // bright sun glare rim
+            shadowGrad.addColorStop(0.3, 'rgba(0, 0, 0, 0)');        // true lit surface colors
+            shadowGrad.addColorStop(1, 'rgba(0, 0, 0, 0.94)');       // pitch black shadow boundary
+
+            ctx.fillStyle = shadowGrad;
+            ctx.fillRect(px - r, py - r, r * 2, r * 2);
+
+            ctx.restore();
+        }
+
+        // Render Simulation Tick
+        function animate() {
+            animationFrameId = requestAnimationFrame(animate);
+            if (currentTab !== 'simulasi') return; // only run drawing when visible
+
+            // Clear Background
+            ctx.fillStyle = '#030712';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Background Star Particles within Simulation
+            ctx.fillStyle = "rgba(255,255,255,0.15)";
+            for(let i=0; i < 40; i++) {
+                let x = (i * 12345) % canvas.width;
+                let y = (i * 54321) % canvas.height;
+                ctx.fillRect(x + offsetX*0.05, y + offsetY*0.05, 1.5, 1.5);
+            }
+
+            const drawOrbits = document.getElementById('chk-orbits').checked;
+            const drawNames = document.getElementById('chk-names').checked;
+
+            // DRAW SUN (MATAHARI) FIRST WITH HIGH-FIDELITY CORONA AURA
+            const sun = simPlanets[0];
+            if (!simulationPaused) {
+                sun.surfaceAngle += 0.01; // animate solar plasma motion
+            }
+
+            // Outer sun corona flares
+            let coronaSize = sun.radius * scaleZoom * (1.6 + Math.sin(sun.surfaceAngle * 5) * 0.08);
+            const sunGrad = ctx.createRadialGradient(
+                offsetX, offsetY, 0,
+                offsetX, offsetY, coronaSize
+            );
+            sunGrad.addColorStop(0, '#fef08a');
+            sunGrad.addColorStop(0.2, '#f59e0b');
+            sunGrad.addColorStop(0.6, 'rgba(239, 68, 68, 0.3)');
+            sunGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+
+            ctx.beginPath();
+            ctx.arc(offsetX, offsetY, coronaSize, 0, Math.PI * 2);
+            ctx.fillStyle = sunGrad;
+            ctx.fill();
+
+            // Sun core sphere with solar noise patches
+            ctx.beginPath();
+            ctx.arc(offsetX, offsetY, sun.radius * scaleZoom, 0, Math.PI * 2);
+            ctx.fillStyle = '#f59e0b';
+            ctx.shadowBlur = 20 * scaleZoom;
+            ctx.shadowColor = '#eab308';
+            ctx.fill();
+            ctx.shadowBlur = 0; // reset glow
+
+            // Draw procedural Solar Spots
+            ctx.fillStyle = "rgba(180, 83, 9, 0.4)";
+            for (let i = 0; i < 3; i++) {
+                let spX = offsetX + Math.cos(sun.surfaceAngle + i * 2) * sun.radius * scaleZoom * 0.4;
+                let spY = offsetY + Math.sin(sun.surfaceAngle * 0.8 + i) * sun.radius * scaleZoom * 0.3;
+                ctx.beginPath();
+                ctx.arc(spX, spY, sun.radius * scaleZoom * 0.15, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw planets
+            for (let i = 1; i < simPlanets.length; i++) {
+                const planet = simPlanets[i];
+
+                // Update position angle and surface rotation if simulation running
+                if (!simulationPaused) {
+                    planet.angle += planet.speed * simulationSpeed;
+                    planet.surfaceAngle += 0.02 * simulationSpeed; // rotate on axis
+                }
+
+                const posX = offsetX + Math.cos(planet.angle) * planet.orbitRadius * scaleZoom;
+                const posY = offsetY + Math.sin(planet.angle) * planet.orbitRadius * scaleZoom;
+
+                // 1. Draw Orbit Line
+                if (drawOrbits) {
+                    ctx.beginPath();
+                    ctx.arc(offsetX, offsetY, planet.orbitRadius * scaleZoom, 0, Math.PI * 2);
+                    ctx.strokeStyle = clickedPlanet === planet.name ? 'rgba(56, 189, 248, 0.4)' : 'rgba(255, 255, 255, 0.05)';
+                    ctx.lineWidth = clickedPlanet === planet.name ? 1.5 : 1;
+                    ctx.stroke();
+                }
+
+                // Calculate direction vector pointing from Sun (offsetX, offsetY) to Planet (posX, posY) for realistic 3D shadow alignment
+                let dx = posX - offsetX;
+                let dy = posY - offsetY;
+                let len = Math.sqrt(dx*dx + dy*dy);
+                let dirX = len > 0 ? dx / len : 0;
+                let dirY = len > 0 ? dy / len : 0;
+
+                // 2. Render Procedural Realistic Planet Sphere with Dynamic Shadowing
+                let renderedRadius = planet.radius * scaleZoom;
+                renderProceduralPlanet(ctx, planet.name, posX, posY, renderedRadius, planet.surfaceAngle, dirX, dirY);
+
+                // 3. Draw Beautiful Saturnus & Uranus Ring structures (drawn outside/over the clipping mask)
+                if (planet.name === 'Saturnus') {
+                    ctx.save();
+                    ctx.translate(posX, posY);
+                    ctx.rotate(Math.PI / 6); // Ring incline plane
+                    
+                    // Behind ring part (draw only if needed, here we draw overall translucent layers for beautiful depth)
+                    ctx.strokeStyle = 'rgba(254, 240, 138, 0.15)';
+                    ctx.lineWidth = 1 * scaleZoom;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, renderedRadius * 2.1, renderedRadius * 0.45, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Main ring band
+                    ctx.strokeStyle = 'rgba(251, 191, 36, 0.65)';
+                    ctx.lineWidth = 4 * scaleZoom;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, renderedRadius * 1.8, renderedRadius * 0.38, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Cassini Division (Empty dark gap)
+                    ctx.strokeStyle = 'rgba(3, 7, 18, 0.8)';
+                    ctx.lineWidth = 0.8 * scaleZoom;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, renderedRadius * 1.6, renderedRadius * 0.34, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Inner dusky Ring
+                    ctx.strokeStyle = 'rgba(180, 83, 9, 0.35)';
+                    ctx.lineWidth = 2.5 * scaleZoom;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, renderedRadius * 1.4, renderedRadius * 0.30, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    ctx.restore();
+                } else if (planet.name === 'Uranus') {
+                    // Uranus has highly tilted thin dark rings
+                    ctx.save();
+                    ctx.translate(posX, posY);
+                    ctx.rotate(Math.PI / 2.1); // vertical ring alignment
+                    ctx.strokeStyle = 'rgba(103, 232, 249, 0.25)';
+                    ctx.lineWidth = 1 * scaleZoom;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, renderedRadius * 1.6, renderedRadius * 0.15, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // Highlight Outline for current clicked selection
+                if (clickedPlanet === planet.name) {
+                    ctx.beginPath();
+                    ctx.arc(posX, posY, renderedRadius + 4, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+
+                // 4. Draw Planet Name Label
+                if (drawNames) {
+                    ctx.font = '500 11px Inter, sans-serif';
+                    ctx.fillStyle = clickedPlanet === planet.name ? '#38bdf8' : '#cbd5e1';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(planet.name, posX, posY - (renderedRadius + 8));
+                }
+            }
+        }
+
+
+        // ----------------------------------------------------
+        // SECTION 2: ENCYCLOPEDIA LOGIC
+        // ----------------------------------------------------
+        function initEncyclopedia() {
+            const keys = Object.keys(spaceData);
+            const listContainer = document.querySelector('.md\\:col-span-3');
+            
+            // clear static Sun entry and rebuild dynamically
+            listContainer.innerHTML = '';
+
+            keys.forEach(key => {
+                const p = spaceData[key];
+                const btn = document.createElement('button');
+                btn.className = `ency-tab-btn flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl transition text-left glass-panel border border-white/5 text-slate-300 hover:text-white hover:bg-white/5`;
+                btn.id = `ency-btn-${key}`;
+                btn.onclick = () => selectEncyPlanet(key);
+
+                btn.innerHTML = `
+                    <span class="w-4 h-4 rounded-full flex-shrink-0" style="background-color: ${p.color}; box-shadow: 0 0 8px ${p.color}aa"></span>
+                    <span class="font-space font-medium text-sm">${p.name}</span>
+                `;
+                listContainer.appendChild(btn);
+            });
+
+            // Default Select Matahari
+            selectEncyPlanet('Matahari');
+        }
+
+        function selectEncyPlanet(name) {
+            const p = spaceData[name];
+            if (!p) return;
+
+            // Update Highlight styling on list
+            document.querySelectorAll('.ency-tab-btn').forEach(btn => {
+                btn.className = "ency-tab-btn flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl transition text-left glass-panel border border-white/5 text-slate-300 hover:text-white hover:bg-white/5";
+            });
+
+            const activeBtn = document.getElementById(`ency-btn-${name}`);
+            if (activeBtn) {
+                activeBtn.className = `ency-tab-btn flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl transition text-left glass-panel border border-sky-500/30 text-sky-400 bg-sky-500/5`;
+            }
+
+            // Update content display with animation effects
+            const panel = document.getElementById('ency-visual');
+            panel.innerText = p.symbol;
+            panel.className = `w-36 h-36 rounded-full flex items-center justify-center text-6xl bg-gradient-to-tr ${p.gradient} transition-all duration-500`;
+
+            document.getElementById('ency-name').innerText = p.name;
+            document.getElementById('ency-symbol').innerText = p.symbol;
+            document.getElementById('ency-subtitle').innerText = p.subtitle;
+            document.getElementById('ency-class').innerText = p.class;
+            
+            document.getElementById('ency-mass').innerText = p.mass;
+            document.getElementById('ency-gravity').innerText = p.gravity;
+            document.getElementById('ency-rotation').innerText = p.rotation;
+            
+            document.getElementById('ency-desc').innerText = p.desc;
+            document.getElementById('ency-diameter').innerText = p.diameter;
+            document.getElementById('ency-distance').innerText = p.distance;
+            document.getElementById('ency-temp').innerText = p.temp;
+            document.getElementById('ency-moons').innerText = p.moons;
+            document.getElementById('ency-funfact').innerText = p.funfact;
+
+            // Set atmospheric background glow
+            document.getElementById('ency-bg-glow').style.backgroundColor = p.color;
+        }
+
+        // ----------------------------------------------------
+        // SECTION 3: COMPARATOR LOGIC
+        // ----------------------------------------------------
+        function initComparison() {
+            const selectA = document.getElementById('comp-select-a');
+            const selectB = document.getElementById('comp-select-b');
+            
+            selectA.innerHTML = '';
+            selectB.innerHTML = '';
+
+            const keys = Object.keys(spaceData);
+            
+            keys.forEach(key => {
+                const optA = document.createElement('option');
+                optA.value = key;
+                optA.innerText = key;
+                selectA.appendChild(optA);
+
+                const optB = document.createElement('option');
+                optB.value = key;
+                optB.innerText = key;
+                selectB.appendChild(optB);
+            });
+
+            // Set initial default selection pairs: Bumi (A) and Mars (B)
+            selectA.value = "Bumi";
+            selectB.value = "Mars";
+
+            updateComparison();
+        }
+
+        function updateComparison() {
+            const nameA = document.getElementById('comp-select-a').value;
+            const nameB = document.getElementById('comp-select-b').value;
+
+            const pA = spaceData[nameA];
+            const pB = spaceData[nameB];
+
+            if(!pA || !pB) return;
+
+            // Write texts
+            document.getElementById('comp-name-a').innerText = pA.name;
+            document.getElementById('comp-name-b').innerText = pB.name;
+            
+            document.getElementById('comp-size-a').innerText = pA.diameter;
+            document.getElementById('comp-size-b').innerText = pB.diameter;
+
+            document.getElementById('comp-lbl-a').innerText = `${pA.name} (${pA.symbol})`;
+            document.getElementById('comp-lbl-b').innerText = `${pB.name} (${pB.symbol})`;
+
+            // Mathematical calculation of scale
+            const sizeValA = pA.diameterValue;
+            const sizeValB = pB.diameterValue;
+
+            let ratio = sizeValA / sizeValB;
+            let ratioText = "";
+            let explanation = "";
+
+            if (ratio >= 1.0) {
+                ratioText = `${pA.name} = ${ratio.toFixed(2)}x lebih besar dari ${pB.name}`;
+                explanation = `Diameter aktual ${pA.name} (${pA.diameter}) kira-kira sebanding dengan ${ratio.toFixed(1)} kali lipat dari lebar planet ${pB.name} (${pB.diameter}).`;
+            } else {
+                let inverseRatio = 1 / ratio;
+                ratioText = `${pA.name} = ${ratio.toFixed(4)}x ukuran ${pB.name}`;
+                explanation = `Diameter aktual ${pA.name} (${pA.diameter}) terbilang sangat kerdil, membutuhkan sekitar ${inverseRatio.toFixed(1)} kali lipatnya untuk menyamai lebar planet ${pB.name} (${pB.diameter}).`;
+            }
+
+            document.getElementById('comp-ratio-text').innerText = ratioText;
+            document.getElementById('comp-explanation').innerText = explanation;
+
+            // Draw visual scaled spheres
+            const circleA = document.getElementById('comp-circle-a');
+            const circleB = document.getElementById('comp-circle-b');
+
+            // Max width available in parent is approx 128px (w-32)
+            // We scale the display using a relative system with minimum boundary logic
+            const baseVisualSize = 130; // maximum visual pixels in app layout
+            
+            let visA, visB;
+            if (sizeValA >= sizeValB) {
+                visA = baseVisualSize;
+                visB = Math.max(12, baseVisualSize * (sizeValB / sizeValA)); // keep visible minimum 12px
+            } else {
+                visB = baseVisualSize;
+                visA = Math.max(12, baseVisualSize * (sizeValA / sizeValB));
+            }
+
+            // Set calculated styles
+            circleA.style.width = `${visA}px`;
+            circleA.style.height = `${visA}px`;
+            circleA.style.backgroundColor = pA.color;
+            circleA.innerText = pA.symbol;
+            circleA.className = `rounded-full bg-gradient-to-tr ${pA.gradient} flex items-center justify-center text-xl font-bold transition-all duration-300`;
+
+            circleB.style.width = `${visB}px`;
+            circleB.style.height = `${visB}px`;
+            circleB.style.backgroundColor = pB.color;
+            circleB.innerText = pB.symbol;
+            circleB.className = `rounded-full bg-gradient-to-tr ${pB.gradient} flex items-center justify-center text-xl font-bold transition-all duration-300`;
+        }
+
+        // ----------------------------------------------------
+        // SECTION 4: KUIS INTERAKTIF LOGIC
+        // ----------------------------------------------------
+        function startQuiz() {
+            // Shuffle and pull exactly 5 questions from bank
+            const shuffled = [...quizQuestionsBank].sort(() => 0.5 - Math.random());
+            quizQuestions = shuffled.slice(0, 5);
+            
+            quizCurrentIndex = 0;
+            quizScore = 0;
+            quizAnswered = false;
+
+            document.getElementById('quiz-welcome').classList.add('hidden');
+            document.getElementById('quiz-result').classList.add('hidden');
+            document.getElementById('quiz-active').classList.remove('hidden');
+
+            showQuestion();
+        }
+
+        function showQuestion() {
+            quizAnswered = false;
+            document.getElementById('quiz-feedback').classList.add('hidden');
+            document.getElementById('quiz-btn-next').classList.add('hidden');
+
+            const currentQ = quizQuestions[quizCurrentIndex];
+            
+            // Header counters
+            document.getElementById('quiz-num-current').innerText = quizCurrentIndex + 1;
+            document.getElementById('quiz-num-total').innerText = quizQuestions.length;
+            document.getElementById('quiz-current-score').innerText = `${quizScore}0`;
+
+            // Progress bar
+            const percent = ((quizCurrentIndex + 1) / quizQuestions.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${percent}%`;
+
+            // Set question text
+            document.getElementById('quiz-question').innerText = currentQ.q;
+
+            // Generate option buttons
+            const container = document.getElementById('quiz-options-container');
+            container.innerHTML = '';
+
+            currentQ.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-xl glass-panel-light hover:bg-white/5 border border-white/5 hover:border-sky-500/30 transition text-sm flex justify-between items-center group font-medium";
+                btn.id = `opt-btn-${idx}`;
+                btn.onclick = () => selectAnswer(idx);
+
+                btn.innerHTML = `
+                    <span>${opt}</span>
+                    <span class="w-5 h-5 rounded-full border border-white/20 group-hover:border-sky-400 flex items-center justify-center text-[10px] text-transparent transition">✓</span>
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (quizAnswered) return; // avoid multiple inputs
+            quizAnswered = true;
+
+            const currentQ = quizQuestions[quizCurrentIndex];
+            const isCorrect = selectedIndex === currentQ.correct;
+
+            if (isCorrect) {
+                quizScore++;
+            }
+
+            // Highlighting colors for options
+            currentQ.options.forEach((_, idx) => {
+                const btn = document.getElementById(`opt-btn-${idx}`);
+                btn.onclick = null; // disable inputs
+
+                const badge = btn.querySelector('span:last-child');
+
+                if (idx === currentQ.correct) {
+                    // Correct green highlight
+                    btn.className = "w-full text-left p-4 rounded-xl bg-emerald-500/15 border border-emerald-500/50 text-emerald-300 text-sm flex justify-between items-center font-semibold";
+                    badge.className = "w-5 h-5 rounded-full bg-emerald-500 text-slate-900 flex items-center justify-center text-xs";
+                    badge.innerHTML = '<i class="fa-solid fa-check"></i>';
+                } else if (idx === selectedIndex) {
+                    // Incorrect red highlight
+                    btn.className = "w-full text-left p-4 rounded-xl bg-rose-500/15 border border-rose-500/50 text-rose-300 text-sm flex justify-between items-center font-medium";
+                    badge.className = "w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs";
+                    badge.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+                } else {
+                    btn.className = "w-full text-left p-4 rounded-xl bg-space-900/50 border border-white/5 text-slate-500 text-sm flex justify-between items-center";
+                }
+            });
+
+            // Show feedback explain window
+            const feedback = document.getElementById('quiz-feedback');
+            const feedbackIcon = document.getElementById('feedback-icon');
+            const feedbackTitle = document.getElementById('feedback-title');
+            const feedbackExp = document.getElementById('feedback-explanation');
+
+            feedback.classList.remove('hidden');
+            if (isCorrect) {
+                feedback.className = "mt-6 glass-panel-light p-4 rounded-xl border-l-4 border-emerald-500";
+                feedbackIcon.innerHTML = "🎉";
+                feedbackTitle.innerText = "Sangat Tepat! Jawaban Benar.";
+                feedbackTitle.className = "text-sm font-bold text-emerald-400";
+            } else {
+                feedback.className = "mt-6 glass-panel-light p-4 rounded-xl border-l-4 border-rose-500";
+                feedbackIcon.innerHTML = "⚠️";
+                feedbackTitle.innerText = "Kurang Tepat!";
+                feedbackTitle.className = "text-sm font-bold text-rose-400";
+            }
+
+            feedbackExp.innerText = currentQ.exp;
+
+            // Show Proceed action button
+            document.getElementById('quiz-btn-next').classList.remove('hidden');
+            document.getElementById('quiz-btn-next').classList.add('flex');
+        }
+
+        function nextQuestion() {
+            quizCurrentIndex++;
+            if (quizCurrentIndex < quizQuestions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-active').classList.add('hidden');
+            document.getElementById('quiz-result').classList.remove('hidden');
+
+            const scorePercent = (quizScore / quizQuestions.length) * 100;
+            document.getElementById('quiz-result-score').innerText = `${scorePercent}%`;
+            document.getElementById('quiz-result-accuracy').innerText = `${quizScore} / ${quizQuestions.length}`;
+
+            const graphic = document.getElementById('quiz-result-graphic');
+            const title = document.getElementById('quiz-result-title');
+            const desc = document.getElementById('quiz-result-desc');
+            const badge = document.getElementById('quiz-badge-title');
+
+            if (scorePercent >= 80) {
+                graphic.innerText = "🏆";
+                title.innerText = "Selamat, Misi Sukses!";
+                desc.innerText = "Pemahaman Tata Surya Anda sangat mengagumkan!";
+                badge.innerText = "Penjelajah Kosmik Ulung";
+            } else if (scorePercent >= 50) {
+                graphic.innerText = "🚀";
+                title.innerText = "Bagus! Teruskan Belajar";
+                desc.innerText = "Sedikit lagi latihan untuk menjadi penjelajah kosmik ahli.";
+                badge.innerText = "Asisten Astronom Magang";
+            } else {
+                graphic.innerText = "🛰️";
+                title.innerText = "Tetap Semangat, Misi Gagal";
+                desc.innerText = "Pelajari lagi ensiklopedia dan coba lagi misi kuis ini.";
+                badge.innerText = "Pengamat Langit Amatir";
+            }
+        }
+
+        function resetQuiz() {
+            document.getElementById('quiz-result').classList.add('hidden');
+            document.getElementById('quiz-welcome').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
